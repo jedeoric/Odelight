@@ -1,0 +1,12 @@
+'Project File (Holds root information about project)
+
+
+
+
+IN="DEMO1" OUT="DEMO.TAP" @8000
+
+'IN="INVERT" OUT="INVERT.TAP" @9700
+'IN="SCRUNCH" OUT="SCRUNCH.TAP" @A000
+'IN="SCPLAYER" OUT="SCPLAYER.TAP" @2000
+'IN="DEMO1" OUT="DEMO.TAP" @4000
+~End

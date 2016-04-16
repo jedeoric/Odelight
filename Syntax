@@ -1,0 +1,179 @@
+CODE    DESCRIPTION                                                          IN CURRENT VERSION
+!	For loading external memory patches (Eg. Long Tables)                       NO
+"	ASCII Notation                                                              YES
+£                                                                                   -
+$	Decimal Notation                                                            YES
+%	Binary Notation                                                             YES
+^	Zero Page Routine                                                           NO
+&	Routine label                                                               YES
+*	Math operator                                                               NO
+(	Reserved for Mnemonic syntax                                                -
+)       Reserved for Mnemonic syntax                                                -
+_                                                                                   -
+-       Math operator                                                               NO
++       Math operator                                                               PARTAIL
+=	Link (Eg. 'Real location' to 'Variable label')                              YES
+{                                                                                   -
+}                                                                                   -
+[       Compact Short Table Start (No comma's, all hex)                             YES
+]       Compact Short Table End (No comma's, all hex)                               YES
+:	Table label                                                                 YES
+;       Variable Label                                                              YES
+'       Remark start                                                                YES
+@       Start address(Org) (If more than one, last is taken as Org for all)         YES
+#       Reserved for Mnemonic syntax                                                -
+~                                                                                   -
+<       Short Table Start                                                           YES
+>       Short Table End                                                             YES
+,       Reserved for Mnemonic syntax and 'Data seperator' in tables                 -
+.	Macro Label                                                                 NO
+\                                                                                   -
+/       Math operator                                                               NO
+|                                                                                   -
+?                                                                                   -
+
+Line Syntax
+!Variable, Table and Routine Labels are not case-sensitive!
+Variables...
+
+;xpos	=BFE0	'Specified location  (Must be in 2/4 Digit Hexadecimal)
+;ypos           'Current mem location (mem is inc'd)
+;TEMPO  (00)    'Specify default Value (Otherwise defaulted as 0)
+
+EXTERNAL LOADS... (NOT YET IMPLEMENTED)
+
+!FILE.EXT	  'WILL LOAD INTO NEXT POSITION FOR THE NUMBER OF BYTES THE FILE CONTAINS
+!FILE.EXT [$5000] 'WILL LOAD IN 5000 BYTES FROM CURRENT MEMORY LOCATION
+!FILE.EXT /RAW    'SPECIFIES THE FILE TO BE /RAW /TEXT (DEFAULT)
+!FILE.EXT +$50    'SPECIFIES OFFSET WITHIN FILE TO START COPYING FROM
+
+Table Formats
+
+:TABLE1		'Name Table
+
+[#00*$100]	'EMPTY TABLE (CONSUMING 100 BYTES OF ZEROES)
+[#"A"*40]       'FILL 64 BYTES WITH CODE 65 *1
+[#$32*L00]	'Pad to XX00 with 32's (NUM AFTER L ALWAYS HEX!!)
+["MESSAGE 1"]   'String *1
+[H&plot,&beaver]'Table containing Routine Lo addresses
+[L&plot,&beaver]'Table containing Routine Hi addresses
+[FF0080FF]	'Compact Table
+<FF,$30,"J","P">'Mixed Table *1
+
+
+
+. Macro Label (Future expansion only)
+
+IN USE...
+
+.POKE 100,20
+
+
+
+DEFINING (ALWAYS DEFINE MACRO BEFORE IT IS USED)
+
+.."POKE"   'DEFINE MACRO NAME FIRST
+
+..LDA #%2  'USE % TO SELECT PARAMETER IN MACRO COMMAND
+	   'EG. 100,20 IS %1,%2
+..STA %1
+...        'TERMINATES MACRO DEFINITION
+
+
+
+
+ASSEMBLY SYNTAX
+
+'ACC/IMP ADDRESSING
+
+LSR
+LSR A
+
+'IMM ADDRESSING (NO DATA)
+'ONLY ADDRESSING MODE THAT ALLOWS DIFFERENT BASES EG. %00100 OR $100 OR "A"
+LDA #20
+LDA #$32
+LDA #" "                       '*1
+LDA #&ROUTINE
+LDA #&ROUTINE
+'ZPG ADDRESSING "  "
+
+STA 00                         '*2
+STA ZERO_PAGE
+
+'ABS ADDRESSING "  "
+STA BFE0                       '*2
+STA ;ABS_ADDRESS
+STA ;ABS_ADDRESS+2
+JSR &ROUTINE
+
+'ZPG,X		",X"
+LDA 00,X
+LDA ZERO_PAGE,X
+
+'ZPG,Y          ",Y"
+LDX 00,Y
+LDX ZERO_PAGE,Y
+
+'ABS,X          ",X"
+LDA BFE0,X
+LDA ABS_ADDRESS,X
+LDA &ROUTINE,X
+
+'ABS,Y          ",Y"
+LDA BFE0,Y
+LDA ABS_ADDRESS,Y
+
+'IND,X          ",X)"
+LDA (00,X)
+LDA (ZERO_PAGE,X)
+
+'IND,Y          "),Y"
+LDA (00),Y
+LDA (ZERO_PAGE),Y
+LDA (:ZERO_PAGE),Y   'INCLUDE THE LABEL TYPE IF DUPLICATE LABEL NAMES
+
+'REL
+BEQ 02
+BEQ +2
+BEQ -2
+BNE &LOOP
+
+NOTES..
+WASTED BYTES OCCUR WHEN THE TABLES ARE FORCED TO START AT XX00.
+THE WASTED BYTES ARE THOSE FROM THE LAST POKED VALUE TO XX00.
+
+*1
+WHEN DEFINING STRINGS, CERTAIN CHARACTERS CANNOT USUALLY BE REPRESENTED
+WITHIN THE QUOTES, INSTEAD, SUCH CHARACTERS ARE REPLACED WITH SWITCHES AS
+SHOWN BELOW...
+
+'       ~APOS~	39
+~	~TILD~	126
+"	~QUOT~  34
+£       ~POUN~  95
+#       ~HASH~  35
+|       ~PIPE~  124
+©	~COPY~	96
+	~DELE~	127
+
+*2
+IN ORDER TO STORE A ROUTINE ADDRESS (FROM A TABLE) TO THE ADDRESS PORTION
+OF A JSR OR JMP INSTRUCTION, YOU'LL NEED TO NOT ONLY HAVE ACCESS TO THE ADDRESS
+LINE BUT AN OFFSET FROM THIS POINT ASWELL.
+NOTE: THIS SYMBOLISING CAN ONLY OCCUR WITHIN ABSOLUTE ADDRESSING, ONLY WITH
+      REFERENCING ROUTINES (&) AND ONLY UP TO 9 BYTES OFFSET.
+IN ORDER TO DO SO, USE THE + SYMBOL FOLLOWED BY THE OFFSET AFTER YOUR STA/LDA
+SYNTAX. EG.
+
+EG.
+TO
+
+STA X1X1
+JSR A0X1
+
+DO..
+
+	STA &JUMPER+1
+&JUMPER JSR A000
+
